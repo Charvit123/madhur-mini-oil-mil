@@ -5,6 +5,105 @@ is maintained by Claude alongside every commit — including small/minor
 changes — so the history of *why* something changed is never lost, even
 across sessions that don't share memory with each other.
 
+## 2026-09-30 — Fix admin panel: navbar/footer leak, Customers/Payments built out, Inventory/Reviews made editable
+
+Follow-up to the admin CRUD build-out, after the user tested it live and
+reported five separate problems. Fixed all five.
+
+**1. Navbar/footer/announcement bar were rendering inside the admin panel**
+
+`app/layout.tsx` wrapped *every* route — including everything under
+`/admin/**` — in the storefront's `<Navbar>`/`<Footer>`, because it's the one
+root layout for the whole app. New `components/SiteChrome.tsx` is a small
+client component that checks the current path and only renders
+Navbar/Footer/CartDrawer for non-admin routes; the admin panel builds its own
+chrome entirely (`AdminSidebar`) and never needed the storefront's.
+
+**2. "Method Not Allowed" / "Forbidden" on Products, Packaging, Oils, Dashboard**
+
+These endpoints were correct in the code — the problem was that the user was
+testing against a build from *before* PR #2 (the admin CRUD work) had been
+merged into `main`. Confirmed `main` now has that commit
+(`aa5aeeb`, merged as `4b7ceb2`); nothing to fix here beyond redeploying from
+current `main`.
+
+**3. Inventory — now editable, with a working CSV export**
+
+`app/admin/(protected)/inventory/page.tsx` was a static server-rendered
+table with a decorative, non-functional "Export CSV" button. Rewritten as a
+client page: inline stock editing (blur-to-save via the existing
+`PATCH .../variants/{id}/stock`), a full edit form (price/MRP/stock/threshold
+/batch/status, via the existing `PUT .../variants/{id}`), and Delete (the
+existing soft-delete/retire). New `lib/exportCsv.ts` — a small dependency-free
+CSV export (browsers/Excel open `.csv` natively; not worth pulling in a real
+`.xlsx` library for a flat table) — is now wired to a real "Export CSV"
+button here and on the other new list pages below. "Add new" for inventory is
+intentionally still on the Products page — a new inventory row needs a
+product and a packaging chosen first, which is exactly what "add pack size"
+there already does; duplicating that flow here would just be two places doing
+the same thing.
+
+**4. Reviews — now deletable, deliberately *not* editable, and admin can't add new ones**
+
+Per explicit instruction: "review should be just deletable not editable and
+also admin can not add new reviews." Previously `reviews/page.tsx` rendered
+hardcoded mock data (`lib/data`), not even wired to the backend. Rewrote it
+end to end:
+- Backend: `AdminReviewController` gained `GET /api/admin/reviews` (full
+  listing, any status) and `DELETE /api/admin/reviews/{id}` (hard delete —
+  reviews are the one place in this app that *is* hard-deleted, since nothing
+  else references a review by id the way orders reference variants).
+  `ReviewService.delete()` recomputes the product's rating rollup if the
+  deleted review had been published. Approve/reject (existing moderation
+  actions, not content edits) were kept.
+- Frontend: real list, Publish/Reject/Delete actions, CSV export. No edit
+  form, no "add new" button, anywhere on this page — on purpose.
+
+**5. Customers and Payments — built out (were "Content"-style placeholder stubs)**
+
+Both previously fell through to `app/admin/(protected)/[section]/page.tsx`,
+a generic "this screen follows the same pattern as Products" placeholder.
+- **Customers** (`app/admin/(protected)/customers/page.tsx`, new): list, edit
+  name/email (`PUT /api/admin/customers/{id}`, new), and delete — which
+  **deactivates** rather than hard-deletes (`PATCH .../deactivate` /
+  `.../reactivate`, new), same soft-delete reasoning as the rest of the app:
+  a customer's past orders reference their id and must stay resolvable. Added
+  a `customer.active` column (`V5__customer_active_and_review_index.sql`) and
+  `AuthService.verifyOtp` now rejects login for a deactivated customer. No
+  "add new customer" button — customers create themselves by signing in or
+  checking out; a hand-added customer record isn't a real thing to manage.
+- **Payments** (`app/admin/(protected)/payments/page.tsx`, new):
+  **read-only**, per explicit instruction — "payment should not be editable
+  it should show only payments which are done." New
+  `AdminPaymentController`/`GET /api/admin/payments` returns only
+  `CAPTURED`/`REFUNDED` payments (a `CREATED`/`AUTHORIZED`/`FAILED` row never
+  completed real money movement, so it isn't "done"), joined with the
+  order number and customer name. `PaymentRepo` gained
+  `findCompletedWithOrderInfo` — `Payment.orderId` isn't a mapped relation,
+  so this is a plain cross-entity JPQL join. Refunding still only happens
+  from the Orders screen, through Razorpay.
+
+**6. Removed the "Content" and "Settings" tabs**
+
+The user asked ("I guess there is not use of admins settings and content
+tabs") — checked, and unlike Customers/Payments these two had no real data
+model behind them at all (no CMS entity, no settings entity), so there was
+nothing to build out. Removed from `ADMIN_NAV` (`lib/content.ts`). **Admins**
+was kept — that's a real, working `SUPER_ADMIN`-only feature (managing other
+admin logins), not a stub.
+
+**Verification**
+
+- Backend: syntax-only `javac` across the full source tree (Maven Central
+  still isn't reachable from this sandbox) — zero parser errors.
+- Frontend: `tsc --noEmit` against a scoped tsconfig covering every
+  changed/new file. Zero `TS1xxx` (syntax) errors. The only errors reported
+  are the same classes of noise seen in unmodified, pre-existing files too
+  (`Footer.tsx`, `Navbar.tsx`) — missing `@types/react`/`@types/node` because
+  `npm install` isn't reachable in this sandbox either. Worth a real
+  `npm run typecheck` + `mvn compile` locally before merging, same caveat as
+  every previous entry here.
+
 ## 2026-09-30 — Full admin catalogue CRUD, real dashboard stats, admin guide
 
 Closed the gap where the admin UI could only *view* the catalogue, not

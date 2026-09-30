@@ -159,3 +159,26 @@ customer's OTP-issued token is rejected by every `/api/admin/**` endpoint,
 and an admin's username/password token doesn't work as a customer session
 on the storefront. They're deliberately kept apart so a bug or a leaked
 token in one system can't reach into the other.
+
+---
+
+## 5. The rest of the admin sidebar, and what's and isn't editable on purpose
+
+Not every screen works the same way — a few are read-only or delete-only
+by design, not because they're unfinished:
+
+| Screen | You can | You can't (on purpose) |
+|---|---|---|
+| **Inventory** | Edit price/MRP/stock/threshold/batch/status inline or via Edit; Delete (retires a pack size) | Add new — that's on **Products**, since a new inventory row needs a product and packaging picked first |
+| **Customers** | Edit name/email; Delete (deactivates — they can no longer sign in, but past orders stay intact); Reactivate | Add new — customers create their own record by signing in or checking out |
+| **Reviews** | Publish/Reject (moderation); **Delete** | Edit a review's text, or add a new one — an admin moderates what customers wrote, never authors or rewrites it |
+| **Payments** | View only, export CSV | Everything else — a payment record reflects what Razorpay actually did. To refund, go to **Orders** and use the Refund action there; it updates this list because it goes through Razorpay |
+
+Every list screen with an **Export CSV** button downloads a real `.csv` of
+what's on screen — it opens directly in Excel.
+
+You may notice the sidebar no longer has **Content** or **Settings** tabs —
+they were removed because neither had a real data model behind them (no CMS
+entity, no settings entity to store). **Admins** is unrelated to those two
+and stays — it's the real, working screen for a `SUPER_ADMIN` to manage other
+admin logins (section 4 above).

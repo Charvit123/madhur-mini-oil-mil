@@ -1,8 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { MotionConfig } from "framer-motion";
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
-import { CartDrawer } from "@/components/CartDrawer";
+import { SiteChrome } from "@/components/SiteChrome";
 import { Toaster } from "@/components/Toast";
 import { api } from "@/lib/api";
 
@@ -50,10 +48,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           elsewhere in the tree, and does not suppress mismatches in children. */}
       <body suppressHydrationWarning>
         <MotionConfig reducedMotion="user">
-          <Navbar oils={oils} />
-          {children}
-          <Footer oils={oils} />
-          <CartDrawer />
+          <SiteChrome oils={oils}>{children}</SiteChrome>
           <Toaster />
         </MotionConfig>
       </body>

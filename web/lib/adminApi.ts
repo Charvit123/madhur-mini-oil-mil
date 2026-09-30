@@ -1,8 +1,8 @@
 import type { OrderDto, OrderPage } from "./order";
 import type { AdminUserView } from "./adminAuth";
 import type {
-  AdminOil, AdminPackaging, AdminProduct, AdminVariant, DashboardStats,
-  PackagingKind, Unit,
+  AdminCustomer, AdminOil, AdminPackaging, AdminPayment, AdminProduct,
+  AdminReview, AdminVariant, DashboardStats, PackagingKind, Unit,
 } from "./types";
 
 export class AdminApiError extends Error {
@@ -210,4 +210,54 @@ export async function adminSetVariantStock(token: string, id: string, stock: num
  *  the mill rarely deletes the whole recipe, just retires one pack size. */
 export async function adminRetireVariant(token: string, id: string): Promise<void> {
   await authedFetch(`/api/admin/catalogue/variants/${id}`, token, { method: "DELETE" });
+}
+
+// ---- customers ----
+
+export interface CustomerForm { name?: string; email?: string }
+
+export async function adminListCustomers(token: string): Promise<AdminCustomer[]> {
+  const res = await authedFetch("/api/admin/customers", token);
+  return res.json();
+}
+
+export async function adminUpdateCustomer(token: string, id: string, form: CustomerForm): Promise<AdminCustomer> {
+  const res = await authedFetch(`/api/admin/customers/${id}`, token, { method: "PUT", body: JSON.stringify(form) });
+  return res.json();
+}
+
+/** Soft delete — a deactivated customer can no longer sign in, but their
+ *  order history stays intact. Reactivate to undo. */
+export async function adminDeactivateCustomer(token: string, id: string): Promise<void> {
+  await authedFetch(`/api/admin/customers/${id}/deactivate`, token, { method: "PATCH" });
+}
+
+export async function adminReactivateCustomer(token: string, id: string): Promise<void> {
+  await authedFetch(`/api/admin/customers/${id}/reactivate`, token, { method: "PATCH" });
+}
+
+// ---- reviews (delete-only — no edit, no admin-authored reviews) ----
+
+export async function adminListReviews(token: string): Promise<AdminReview[]> {
+  const res = await authedFetch("/api/admin/reviews", token);
+  return res.json();
+}
+
+export async function adminApproveReview(token: string, id: string): Promise<void> {
+  await authedFetch(`/api/admin/reviews/${id}/approve`, token, { method: "POST" });
+}
+
+export async function adminRejectReview(token: string, id: string): Promise<void> {
+  await authedFetch(`/api/admin/reviews/${id}/reject`, token, { method: "POST" });
+}
+
+export async function adminDeleteReview(token: string, id: string): Promise<void> {
+  await authedFetch(`/api/admin/reviews/${id}`, token, { method: "DELETE" });
+}
+
+// ---- payments (read-only — completed payments only) ----
+
+export async function adminListPayments(token: string): Promise<AdminPayment[]> {
+  const res = await authedFetch("/api/admin/payments", token);
+  return res.json();
 }

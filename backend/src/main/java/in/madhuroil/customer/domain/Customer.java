@@ -29,6 +29,10 @@ public class Customer {
     /** True once they have verified an OTP at least once, vs. a guest record created purely from a checkout. */
     @Column(name = "phone_verified", nullable = false) private boolean phoneVerified = false;
 
+    /** Soft delete — a deactivated customer can no longer sign in, but their
+     *  past orders (and any admin note referencing them) stay resolvable. */
+    @Column(name = "active", nullable = false) private boolean active = true;
+
     @Column(name = "created_at", nullable = false, updatable = false) private Instant createdAt = Instant.now();
     @Column(name = "updated_at", nullable = false) private Instant updatedAt = Instant.now();
     @PreUpdate void touch() { this.updatedAt = Instant.now(); }

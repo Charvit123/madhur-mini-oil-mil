@@ -17,6 +17,14 @@ public final class CustomerDtos {
 
     public record CustomerDto(UUID id, String phone, String name, String email, boolean phoneVerified) {}
 
+    /** Admin-facing — adds `active` (soft-delete flag) and `createdAt`, neither
+     *  of which the customer's own CustomerDto needs to expose to themselves. */
+    public record AdminCustomerDto(
+            UUID id, String phone, String name, String email,
+            boolean phoneVerified, boolean active, java.time.Instant createdAt) {}
+
+    public record AdminCustomerForm(String name, String email) {}
+
     public record AddressForm(
             @NotBlank String fullName,
             @NotBlank @Pattern(regexp = "^[6-9]\\d{9}$") String phone,

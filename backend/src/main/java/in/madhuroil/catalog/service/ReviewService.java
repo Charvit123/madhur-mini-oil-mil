@@ -58,6 +58,20 @@ public class ReviewService {
         return r;
     }
 
+    /** Reviews are the one place in the admin panel that's delete-only —
+     *  there's no "edit a customer's review text" and no "admin writes a new
+     *  review". A hard delete is fine here (unlike the catalogue's soft
+     *  deletes): nothing else references a review by id, so there's no order
+     *  history to keep resolvable. If it was published, the product's rating
+     *  rollup is recomputed so the storefront average doesn't include it. */
+    public void delete(UUID id) {
+        Review r = get(id);
+        UUID productId = r.getProduct().getId();
+        boolean wasPublished = r.getStatus() == Review.Status.PUBLISHED;
+        reviews.delete(r);
+        if (wasPublished) recomputeRollup(productId);
+    }
+
     private Review get(UUID id) {
         return reviews.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No such review"));
     }
