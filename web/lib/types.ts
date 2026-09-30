@@ -89,6 +89,91 @@ export interface ShopFacets {
 
 export interface Page<T> { items: T[]; page: number; size: number; total: number; totalPages: number }
 
+// ---- admin catalogue (mirrors backend AdminCatalogueDtos) ----
+// Unlike the public types above, these include retired (active:false) rows
+// too, since the admin needs to see and reactivate them.
+
+export interface AdminOil {
+  id: string;
+  name: string;
+  slug: string;
+  tagline?: string;
+  description?: string;
+  oilColor: string;
+  seedColor?: string;
+  sortOrder: number;
+  active: boolean;
+  productCount: number;
+}
+
+export interface AdminPackaging {
+  id: string;
+  name: string;
+  code: string;
+  kind: PackagingKind;
+  size: number;
+  unit: Unit;
+  shortLabel: string;
+  sortOrder: number;
+  active: boolean;
+}
+
+export interface AdminProduct {
+  id: string;
+  name: string;
+  slug: string;
+  shortDescription?: string;
+  description?: string;
+  oilCategoryId: string;
+  oilCategoryName: string;
+  active: boolean;
+  featured: boolean;
+  sortOrder: number;
+  variantCount: number;
+}
+
+export interface AdminVariant {
+  id: string;
+  sku: string;
+  productId: string;
+  productName: string;
+  oilCategoryId: string;
+  oilCategoryName: string;
+  packagingId: string;
+  packagingName: string;
+  price: number;
+  mrp?: number;
+  stock: number;
+  lowStockThreshold: number;
+  batchCode?: string;
+  active: boolean;
+  updatedAt: string;
+}
+
+export interface DashboardRecentOrder {
+  orderNumber: string;
+  customerName: string;
+  itemsSummary: string;
+  total: number;
+  status: string;
+  paid: boolean;
+  placedAt: string;
+}
+
+export interface DashboardWeeklySales { weekLabel: string; total: number }
+
+export interface DashboardStats {
+  revenueThisMonth: number;
+  revenueLastMonth: number;
+  revenueChangePercent: number;
+  ordersThisMonth: number;
+  pendingOrders: number;
+  activeVariants: number;
+  lowStockCount: number;
+  recentOrders: DashboardRecentOrder[];
+  salesLast12Weeks: DashboardWeeklySales[];
+}
+
 export interface ShopQuery {
   oil?: string[];
   pack?: string[];

@@ -1,5 +1,9 @@
 import type { OrderDto, OrderPage } from "./order";
 import type { AdminUserView } from "./adminAuth";
+import type {
+  AdminOil, AdminPackaging, AdminProduct, AdminVariant, DashboardStats,
+  PackagingKind, Unit,
+} from "./types";
 
 export class AdminApiError extends Error {
   constructor(message: string, public status?: number) { super(message); }
@@ -79,4 +83,131 @@ export async function adminDeactivate(token: string, id: string): Promise<void> 
 
 export async function adminReactivate(token: string, id: string): Promise<void> {
   await authedFetch(`/api/admin/admins/${id}/reactivate`, token, { method: "PATCH" });
+}
+
+// ---- dashboard ----
+
+export async function adminDashboardStats(token: string): Promise<DashboardStats> {
+  const res = await authedFetch("/api/admin/dashboard/stats", token);
+  return res.json();
+}
+
+// ---- catalogue: oils ----
+
+export interface OilForm {
+  name: string; slug: string; tagline?: string; description?: string;
+  oilColor: string; seedColor?: string; heroImageUrl?: string;
+  sortOrder?: number; active?: boolean;
+}
+
+export async function adminListOils(token: string): Promise<AdminOil[]> {
+  const res = await authedFetch("/api/admin/catalogue/oils", token);
+  return res.json();
+}
+
+export async function adminCreateOil(token: string, form: OilForm): Promise<AdminOil> {
+  const res = await authedFetch("/api/admin/catalogue/oils", token, { method: "POST", body: JSON.stringify(form) });
+  return res.json();
+}
+
+export async function adminUpdateOil(token: string, id: string, form: OilForm): Promise<AdminOil> {
+  const res = await authedFetch(`/api/admin/catalogue/oils/${id}`, token, { method: "PUT", body: JSON.stringify(form) });
+  return res.json();
+}
+
+/** Soft delete — retired oils stop showing on the storefront but stay
+ *  resolvable for past orders. Reactivate with adminUpdateOil(..., {active:true}). */
+export async function adminRetireOil(token: string, id: string): Promise<void> {
+  await authedFetch(`/api/admin/catalogue/oils/${id}`, token, { method: "DELETE" });
+}
+
+// ---- catalogue: packagings ----
+
+export interface PackagingForm {
+  name: string; code: string; kind: PackagingKind; size: number; unit: Unit;
+  grossWeightKg?: number; sortOrder?: number; active?: boolean;
+}
+
+export async function adminListPackagings(token: string): Promise<AdminPackaging[]> {
+  const res = await authedFetch("/api/admin/catalogue/packagings", token);
+  return res.json();
+}
+
+export async function adminCreatePackaging(token: string, form: PackagingForm): Promise<AdminPackaging> {
+  const res = await authedFetch("/api/admin/catalogue/packagings", token, { method: "POST", body: JSON.stringify(form) });
+  return res.json();
+}
+
+export async function adminUpdatePackaging(token: string, id: string, form: PackagingForm): Promise<AdminPackaging> {
+  const res = await authedFetch(`/api/admin/catalogue/packagings/${id}`, token, { method: "PUT", body: JSON.stringify(form) });
+  return res.json();
+}
+
+export async function adminRetirePackaging(token: string, id: string): Promise<void> {
+  await authedFetch(`/api/admin/catalogue/packagings/${id}`, token, { method: "DELETE" });
+}
+
+// ---- catalogue: products ----
+
+export interface ProductForm {
+  oilCategoryId: string; name: string; slug: string;
+  shortDescription?: string; description?: string;
+  extractionMethod?: string; shelfLifeMonths?: number; madeAt?: string;
+  featured?: boolean; sortOrder?: number; active?: boolean;
+}
+
+export async function adminListProducts(token: string): Promise<AdminProduct[]> {
+  const res = await authedFetch("/api/admin/catalogue/products", token);
+  return res.json();
+}
+
+export async function adminCreateProduct(token: string, form: ProductForm): Promise<AdminProduct> {
+  const res = await authedFetch("/api/admin/catalogue/products", token, { method: "POST", body: JSON.stringify(form) });
+  return res.json();
+}
+
+export async function adminUpdateProduct(token: string, id: string, form: ProductForm): Promise<AdminProduct> {
+  const res = await authedFetch(`/api/admin/catalogue/products/${id}`, token, { method: "PUT", body: JSON.stringify(form) });
+  return res.json();
+}
+
+/** Soft delete — retires the product (and it stops offering its variants for
+ *  sale); past orders referencing its variants are untouched. */
+export async function adminRetireProduct(token: string, id: string): Promise<void> {
+  await authedFetch(`/api/admin/catalogue/products/${id}`, token, { method: "DELETE" });
+}
+
+// ---- catalogue: variants (the actual purchasable rows) ----
+
+export interface VariantForm {
+  productId: string; packagingId: string; sku?: string;
+  price: number; mrp?: number; stock?: number; lowStockThreshold?: number;
+  batchCode?: string; active?: boolean;
+}
+
+export async function adminListVariants(token: string): Promise<AdminVariant[]> {
+  const res = await authedFetch("/api/admin/catalogue/variants", token);
+  return res.json();
+}
+
+export async function adminCreateVariant(token: string, form: VariantForm): Promise<AdminVariant> {
+  const res = await authedFetch("/api/admin/catalogue/variants", token, { method: "POST", body: JSON.stringify(form) });
+  return res.json();
+}
+
+export async function adminUpdateVariant(token: string, id: string, form: VariantForm): Promise<AdminVariant> {
+  const res = await authedFetch(`/api/admin/catalogue/variants/${id}`, token, { method: "PUT", body: JSON.stringify(form) });
+  return res.json();
+}
+
+export async function adminSetVariantStock(token: string, id: string, stock: number): Promise<AdminVariant> {
+  const res = await authedFetch(`/api/admin/catalogue/variants/${id}/stock?stock=${stock}`, token, { method: "PATCH" });
+  return res.json();
+}
+
+/** Soft delete — stops the variant (one pack size of one product) from
+ *  being sold. This is "remove a product" for most day-to-day purposes:
+ *  the mill rarely deletes the whole recipe, just retires one pack size. */
+export async function adminRetireVariant(token: string, id: string): Promise<void> {
+  await authedFetch(`/api/admin/catalogue/variants/${id}`, token, { method: "DELETE" });
 }

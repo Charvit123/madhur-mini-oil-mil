@@ -23,6 +23,23 @@ public interface ProductVariantRepo extends JpaRepository<ProductVariant, UUID>,
 
     List<ProductVariant> findByStockLessThanEqualAndActiveTrue(int threshold);
 
+    /** Admin listing — includes retired variants, and product/oil/packaging
+     *  eagerly fetched so the admin table (and its DTO mapping) never trips
+     *  the open-in-view=false lazy-init guard. */
+    @EntityGraph(attributePaths = {"product", "product.oilCategory", "packaging"})
+    @Query("select v from ProductVariant v order by v.createdAt desc")
+    List<ProductVariant> findAllForAdmin();
+
+    @EntityGraph(attributePaths = {"product", "product.oilCategory", "packaging"})
+    @Query("select v from ProductVariant v where v.id = :id")
+    Optional<ProductVariant> findByIdForAdmin(@Param("id") UUID id);
+
+    boolean existsBySku(String sku);
+    long countByActiveTrue();
+
+    @Query("select count(v) from ProductVariant v where v.active = true and v.stock <= v.lowStockThreshold")
+    long countLowStock();
+
     /**
      * Atomic decrement. Returns 0 rows when stock is insufficient, which the
      * order service treats as "someone else took the last tin".

@@ -10,4 +10,7 @@ public interface OilCategoryRepo extends JpaRepository<OilCategory, UUID> {
     List<OilCategory> findByActiveTrueOrderBySortOrderAsc();
     Optional<OilCategory> findBySlugAndActiveTrue(String slug);
     boolean existsBySlug(String slug);
+
+    /** Admin listing — includes retired oils too, so they can be reactivated. */
+    List<OilCategory> findAllByOrderBySortOrderAsc();
 }

@@ -9,4 +9,7 @@ import java.util.*;
 public interface PackagingRepo extends JpaRepository<Packaging, UUID> {
     List<Packaging> findByActiveTrueOrderBySortOrderAsc();
     Optional<Packaging> findByCode(String code);
+
+    /** Admin listing — includes retired packagings too, so they can be reactivated. */
+    List<Packaging> findAllByOrderBySortOrderAsc();
 }
