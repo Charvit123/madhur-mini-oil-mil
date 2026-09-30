@@ -118,8 +118,9 @@ public class SecurityConfig {
     }
 
     /** The Next.js dev server runs on a different origin, so this needs to be
-     *  explicit. The 192.168.*/10.*/172.16-31.* patterns cover testing from a
-     *  phone or another machine on a typical home/office LAN out of the box —
+     *  explicit. The 192.168.x.x, 10.x.x.x and 172.16-31.x.x patterns cover
+     *  testing from a phone or another machine on a typical home/office LAN
+     *  out of the box —
      *  e.g. opening the frontend at http://192.168.1.13:3000 and having its
      *  browser-side requests reach this API. Set app.cors.allowed-origin to
      *  one or more comma-separated origins (your deployed frontend's URL,

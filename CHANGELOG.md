@@ -5,6 +5,27 @@ is maintained by Claude alongside every commit — including small/minor
 changes — so the history of *why* something changed is never lost, even
 across sessions that don't share memory with each other.
 
+## 2026-09-30 — Fix: SecurityConfig.java Javadoc comment self-terminating early
+
+- **Bug:** `backend/src/main/java/in/madhuroil/config/SecurityConfig.java`
+  had a Javadoc comment (around the `corsConfigurationSource` bean) whose
+  text included the literal sequence `192.168.*/10.*/172.16-31.*` — but `*/`
+  is what *ends* a `/** */` comment, wherever it appears. So the comment
+  actually closed right after `192.168.`, and everything after that (several
+  lines of comment text, down to the real `*/`) got parsed as Java code
+  instead of a comment. That produced a cascade of ~29 unrelated-looking
+  compiler errors (`illegal start of type`, `';' expected`, `illegal
+  character: '—'`, `unclosed character literal`, …) all pointing at
+  lines that were actually just prose.
+- **Fix:** reworded the comment to avoid writing pattern-style
+  `192.168.*/10.*` — now spelled out as `192.168.x.x, 10.x.x.x and
+  172.16-31.x.x` — so no `*/` sequence occurs before the comment's real end.
+  No behavior change; the CORS origin-matching logic itself was untouched.
+- Verified with a syntax-only `javac` pass (Spring not on the classpath in
+  this environment, so full `mvn compile` isn't runnable here) — confirmed
+  zero parser-level errors remain; only expected "cannot find symbol" for
+  Spring imports, which resolve fine once run with the real dependencies.
+
 ## 2026-09-30 — Initial push to GitHub
 
 - Connected the project to `github.com/Charvit123/madhur-mini-oil-mil` and
