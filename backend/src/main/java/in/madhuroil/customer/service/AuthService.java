@@ -64,6 +64,9 @@ public class AuthService {
 
         Customer customer = customers.findByPhone(phone).orElseGet(() ->
                 customers.save(Customer.builder().phone(phone).phoneVerified(true).build()));
+        if (!customer.isActive()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "This account has been deactivated. Contact us if this is a mistake.");
+        }
         if (!customer.isPhoneVerified()) {
             customer.setPhoneVerified(true);
         }

@@ -174,6 +174,43 @@ export interface DashboardStats {
   salesLast12Weeks: DashboardWeeklySales[];
 }
 
+export interface AdminCustomer {
+  id: string;
+  phone: string;
+  name?: string;
+  email?: string;
+  phoneVerified: boolean;
+  active: boolean;
+  createdAt: string;
+}
+
+export interface AdminReview {
+  id: string;
+  productId: string;
+  productName: string;
+  authorName: string;
+  city?: string;
+  rating: number;
+  title?: string;
+  body?: string;
+  verifiedPurchase: boolean;
+  status: "PENDING" | "PUBLISHED" | "REJECTED";
+  createdAt: string;
+}
+
+export interface AdminPayment {
+  id: string;
+  orderId: string;
+  orderNumber: string;
+  customerName: string;
+  razorpayPaymentId?: string;
+  status: "CREATED" | "AUTHORIZED" | "CAPTURED" | "FAILED" | "REFUNDED";
+  amount: number;
+  method?: string;
+  refundedAmount?: number;
+  createdAt: string;
+}
+
 export interface ShopQuery {
   oil?: string[];
   pack?: string[];

@@ -47,7 +47,10 @@ export const NAV_ITEMS: [string, string][] = [
   ["Contact", "/contact"],
 ];
 
+// "Content" and "Settings" were placeholder stubs with no real data behind
+// them (no CMS model, no settings model) — dropped rather than left as dead
+// tabs. Every tab left here maps to a real, working admin screen.
 export const ADMIN_NAV = [
   "Dashboard", "Oils", "Packaging", "Products", "Orders", "Customers",
-  "Inventory", "Payments", "Reviews", "Admins", "Content", "Settings",
+  "Inventory", "Payments", "Reviews", "Admins",
 ] as const;

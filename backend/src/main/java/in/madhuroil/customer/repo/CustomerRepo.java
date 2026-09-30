@@ -8,4 +8,5 @@ import java.util.*;
 @Repository
 public interface CustomerRepo extends JpaRepository<Customer, UUID> {
     Optional<Customer> findByPhone(String phone);
+    List<Customer> findAllByOrderByCreatedAtDesc();
 }

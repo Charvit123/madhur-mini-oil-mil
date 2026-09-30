@@ -2,11 +2,15 @@ import { notFound } from "next/navigation";
 import { AdminHeader } from "../AdminShell";
 import { ADMIN_NAV } from "@/lib/content";
 
-const HANDLED = new Set(["dashboard", "oils", "packaging", "products", "inventory", "reviews", "orders", "admins"]);
+const HANDLED = new Set([
+  "dashboard", "oils", "packaging", "products", "inventory", "reviews",
+  "orders", "admins", "customers", "payments",
+]);
 
-/** Customers, Payments, Content, Settings — same table shell as the built-out
- *  screens, wired to the same API layer, so filling these in later is "swap
- *  the mock rows for a real query", not a new page pattern. */
+/** Every real ADMIN_NAV section now has its own page.tsx (a literal route
+ *  segment always wins over this dynamic [section] catch-all in the App
+ *  Router), so nothing in HANDLED should ever actually reach here — this is
+ *  just a safety net against a stray/renamed link. */
 export default async function AdminSectionStub({ params }: { params: Promise<{ section: string }> }) {
   const { section } = await params;
   if (HANDLED.has(section)) notFound();
