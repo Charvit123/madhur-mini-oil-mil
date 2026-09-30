@@ -1,0 +1,35 @@
+# Local development. Defaults match docker-compose.yml's db service, but you
+# don't need Docker — any Postgres you can already see in pgAdmin works too.
+# Either create a `madhur` / `madhur` database+role matching these defaults
+# (see backend/README.md), or override via env vars / a .env file without
+# touching this file:
+#   DB_URL=jdbc:postgresql://localhost:5432/your_db_name
+#   DB_USERNAME=your_username
+#   DB_PASSWORD=your_password
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/madhur}
+    username: ${DB_USERNAME:madhur}
+    password: ${DB_PASSWORD:madhur_dev_only}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 20000
+
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+logging:
+  level:
+    in.madhuroil: DEBUG
+    org.hibernate.SQL: DEBUG
+
+# SecurityConfig's "dev" profile filter chain leaves every route open, so no
+# token is needed to hit /api/admin/** or /api/orders/** while you build against
+# this locally. Switch to any other profile (or unset "dev") to exercise real auth.
+#
+# DevSmsSender (active only on this profile) prints OTP codes to this console
+# instead of sending a real SMS — watch the log after POST /api/auth/otp/request.

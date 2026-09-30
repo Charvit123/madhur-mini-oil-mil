@@ -1,0 +1,78 @@
+# Base config, shared by every profile. Nothing environment-specific lives here —
+# that's what application-dev.yml / application-prod.yml are for.
+spring:
+  application:
+    name: madhur-catalog-service
+
+  # Flyway owns the schema. Hibernate is read-only about DDL so a migration
+  # file is always the source of truth, never an entity annotation.
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false          # each request explicitly loads what it needs
+    properties:
+      hibernate:
+        jdbc.batch_size: 30
+        order_inserts: true
+        order_updates: true
+        # Without this, ProductVariant.imageUrls (an @ElementCollection, lazy
+        # by default) fires one "select ... from variant_image where
+        # variant_id=?" per variant when a list of variants gets mapped to
+        # DTOs — an N+1 query pattern. This batches those lazy loads into
+        # "where variant_id in (?,?,?...)" calls instead, in groups of up to
+        # 25 — same data, same DTOs, no entity/mapper changes needed.
+        default_batch_fetch_size: 25
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=500,expireAfterWrite=5m
+
+  threads:
+    virtual:
+      enabled: true              # Java 21 virtual threads for request handling
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when-authorized
+
+app:
+  revalidate:
+    # Called after every admin write so Next.js drops its cached fetches.
+    # See in.madhuroil.config.RevalidationClient.
+    web-url: ${FRONTEND_URL:http://localhost:3000}
+    secret: ${REVALIDATE_SECRET:change-me-in-dev}
+
+  # Self-issued JWT signing key (see config.JwtConfig / config.JwtIssuer).
+  # Must be at least 32 characters. Generate a real one for prod with:
+  #   openssl rand -base64 48
+  jwt:
+    secret: ${JWT_SECRET:dev-only-secret-key-change-this-before-deploying-anywhere-real}
+
+  # Admin logins are real rows in the admin_user table now (see
+  # adminuser.domain.AdminUser), not a single env-configured account — there
+  # can be a handful of named admins, each SUPER_ADMIN or ADMIN. V4's
+  # migration seeds one SUPER_ADMIN, username "admin", password "admin123"
+  # (bcrypt hash below matches that password) — change it after first login,
+  # or add more accounts via POST /api/admin/admins once signed in. Generate
+  # a new hash for anything else with backend/scripts/hash-password.sh.
+
+  razorpay:
+    key-id: ${RAZORPAY_KEY_ID:rzp_test_placeholder}
+    key-secret: ${RAZORPAY_KEY_SECRET:placeholder_secret}
+    webhook-secret: ${RAZORPAY_WEBHOOK_SECRET:}
+
+  cors:
+    allowed-origin: ${FRONTEND_URL:}

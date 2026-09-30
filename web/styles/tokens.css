@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Same palette and radii as the original single-file prototype, split into
+   CSS variables so Tailwind classes (bg-paper, text-ink-3, rounded-card, …)
+   read from one source instead of hardcoded hex in every component. */
+:root {
+  --paper: #FBF6EC;
+  --paper-2: #F4EBDA;
+  --card: #FFFFFF;
+
+  --ink: #241B14;
+  --ink-2: #4B3B2D;
+  --ink-3: #7A6A5A;
+
+  --olive: #5B6B3A;
+  --olive-d: #43512A;
+  --olive-tint: #EEF0E3;
+
+  --gold: #D79B1E;
+  --gold-d: #A8760E;
+  --gold-tint: #FBEECE;
+
+  --kiln: #B3541E;
+  --kiln-tint: #F7E4D6;
+
+  --line: #E7DCC7;
+  --line-2: #D6C7AC;
+
+  --ok: #3F7A46;
+  --warn: #B07A10;
+  --err: #A93226;
+
+  --nav-h: 74px;
+
+  /* Self-hosted via @fontsource (see app/layout.tsx) — these two names are
+     what @fontsource registers as @font-face family names for the imported
+     weight files, so they must match exactly. */
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-ui: "Hanken Grotesk", ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html {
+  color-scheme: light;
+  scroll-padding-top: calc(var(--nav-h) + 12px);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-ui), ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display), Georgia, "Times New Roman", serif;
+  font-weight: 600;
+  line-height: 1.08;
+  letter-spacing: -0.015em;
+  margin: 0;
+}
+
+:focus-visible {
+  outline: 2.5px solid var(--olive);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.shell { width: min(1280px, 100% - 40px); margin-inline: auto; }
+
+/* Reveal-on-scroll used across the marketing sections, identical timing to
+   the prototype's IntersectionObserver-driven .reveal class. */
+.reveal { opacity: 0; transform: translateY(16px); }
+.reveal.in {
+  opacity: 1; transform: none;
+  transition: opacity .6s ease, transform .6s cubic-bezier(.2,.7,.3,1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; }
+}

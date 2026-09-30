@@ -1,0 +1,25 @@
+# Optional convenience: a local Postgres for `./mvnw spring-boot:run
+# -Dspring-boot.run.profiles=dev`. If you already have Postgres running
+# (e.g. the one pgAdmin is pointed at), you don't need this file at all —
+# just create a `madhur` database + role there instead (see backend/README.md)
+# or set DB_URL / DB_USERNAME / DB_PASSWORD to match what you already have.
+# Not used in production either way — production always uses DB_URL etc.
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: madhur
+      POSTGRES_USER: madhur
+      POSTGRES_PASSWORD: madhur_dev_only
+    ports:
+      - "5432:5432"
+    volumes:
+      - madhur-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U madhur"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  madhur-db:

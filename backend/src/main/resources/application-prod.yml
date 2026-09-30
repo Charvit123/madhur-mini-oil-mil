@@ -1,0 +1,38 @@
+# Production. Every value here comes from the environment — nothing is
+# hardcoded, matching the same rule the catalogue itself follows.
+spring:
+  datasource:
+    url: ${DB_URL}                 # jdbc:postgresql://<host>:5432/madhur
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:20}
+      minimum-idle: 5
+      connection-timeout: 30000
+      leak-detection-threshold: 30000
+
+  jpa:
+    show-sql: false
+
+server:
+  port: ${PORT:8080}
+  shutdown: graceful
+  forward-headers-strategy: framework   # correct scheme/host behind a proxy/load balancer
+
+app:
+  jwt:
+    secret: ${JWT_SECRET}                        # required — 32+ chars, e.g. `openssl rand -base64 48`
+  # No app.admin block here on purpose — admin accounts live in the
+  # admin_user table (see adminuser.domain.AdminUser) and are managed via
+  # POST /api/admin/admins by an existing SUPER_ADMIN, not environment
+  # variables. Before this runs against a production database for the first
+  # time, either apply a migration that seeds a real SUPER_ADMIN with a
+  # password hash you generated yourself (backend/scripts/hash-password.sh),
+  # or connect once with dev's seeded admin/admin123 and change it
+  # immediately from there.
+  razorpay:
+    key-id: ${RAZORPAY_KEY_ID}
+    key-secret: ${RAZORPAY_KEY_SECRET}
+    webhook-secret: ${RAZORPAY_WEBHOOK_SECRET}
+  cors:
+    allowed-origin: ${FRONTEND_URL}               # e.g. https://madhuroil.in
